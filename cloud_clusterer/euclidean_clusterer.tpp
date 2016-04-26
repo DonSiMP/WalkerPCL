@@ -17,7 +17,6 @@ void EuclideanClusterer<T>::cluster(const typename pcl::PointCloud<T>::ConstPtr 
     typename pcl::search::KdTree<T>::Ptr tree(new pcl::search::KdTree<T>);
     tree->setInputCloud(input_cloud);
 
-    pcl::EuclideanClusterExtraction<T> clusterer;
     clusterer.setSearchMethod(tree);
     clusterer.setInputCloud(input_cloud);
 
