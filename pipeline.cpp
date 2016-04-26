@@ -15,6 +15,7 @@
 #include <pcl/PointIndices.h>
 
 #include "filter/downsampler.h"
+#include "cloud_clusterer/euclidean_clusterer.h"
 
 typedef pcl::PointXYZ PointType;
 
@@ -44,42 +45,6 @@ void plane_filter(pcl::PointCloud<PointType>::ConstPtr const &input_cloud, pcl::
     cloud_extractor.filter(*filtered_cloud);
 }
 
-void clusterExtraction(pcl::PointCloud<PointType>::ConstPtr const &input_cloud, std::vector<pcl::PointCloud<PointType>::Ptr> &clusters) {
-
-    /* Extract cluster indices */
-
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<PointType>);
-    tree->setInputCloud(input_cloud);
-
-    pcl::EuclideanClusterExtraction<PointType> clusterer;
-    clusterer.setClusterTolerance(15.0); //TODO 1.5 cm, hardcoded
-    clusterer.setMinClusterSize(100); //TODO hardcoded
-    clusterer.setMaxClusterSize(25000); //TODO hardcoded
-    clusterer.setSearchMethod(tree);
-    clusterer.setInputCloud(input_cloud);
-
-    std::vector<pcl::PointIndices> cluster_indices;
-    clusterer.extract(cluster_indices);
-
-    std::cout << cluster_indices.size() << " clusters detected" << std::endl;
-
-    /* Extract point clouds using cluster indices */
-
-    pcl::ExtractIndices<PointType> cloud_extractor(new pcl::ExtractIndices<PointType>);
-    cloud_extractor.setInputCloud(input_cloud);
-    for (std::vector<pcl::PointIndices>::const_iterator cluster_it = cluster_indices.begin(); cluster_it != cluster_indices.end(); ++cluster_it) {
-        pcl::PointIndicesPtr indices = boost::make_shared<pcl::PointIndices> (*cluster_it); //TODO, copy, it's not efficient, check nop_destructor alternative hack
-
-        cloud_extractor.setIndices(indices);
-        cloud_extractor.setNegative(false);
-
-        pcl::PointCloud<PointType>::Ptr cluster(new pcl::PointCloud<PointType>);
-
-        cloud_extractor.filter(*cluster);
-        clusters.push_back(cluster);
-    }
-}
-
 int main (int argc, char *argv[]) {
     std::string file_name;
     pcl::PointCloud<PointType>::Ptr input_cloud(new pcl::PointCloud<PointType>);
@@ -107,7 +72,9 @@ int main (int argc, char *argv[]) {
 
     std::vector<pcl::PointCloud<PointType>::Ptr> clusters;
     plane_filter(downsampled_cloud, filtered_cloud);
-    clusterExtraction(filtered_cloud, clusters);
+
+    EuclideanClusterer<PointType> clusterer(15.0, 100, 25000); // tolerance: 1.5 cm, min: 100, max: 25000, TODO hardcoded
+    clusterer.cluster(filtered_cloud, clusters);
 
     for (size_t i = 0; i < clusters.size(); ++i) {
         std::cerr << "Saving cluster " << i << " to file...";
