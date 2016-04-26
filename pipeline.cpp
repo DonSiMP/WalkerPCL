@@ -14,18 +14,13 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/PointIndices.h>
 
+#include "filter/downsampler.h"
+
 typedef pcl::PointXYZ PointType;
 
 void usage(const std::string &call) {
     std::cout << call << " FILE_NAME" << std::endl;
     exit(1);
-}
-
-void filter(pcl::PointCloud<PointType>::ConstPtr const &input_cloud, pcl::PointCloud<PointType>::Ptr &filtered_cloud) {
-    pcl::VoxelGrid<PointType> downsample;
-    downsample.setInputCloud(input_cloud);
-    downsample.setLeafSize(01.0, 01.0, 01.0); //TODO 0.1 cm
-    downsample.filter(*filtered_cloud);
 }
 
 void plane_filter(pcl::PointCloud<PointType>::ConstPtr const &input_cloud, pcl::PointCloud<PointType>::Ptr &filtered_cloud) {
@@ -103,15 +98,15 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
-    pcl::VoxelGrid<PointType> downsample;
     pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>);
+
+    Downsampler<PointType> downsampler(01.0, 01.0, 01.0);
+    downsampler.filter(input_cloud, downsampled_cloud);
+
     pcl::PointCloud<PointType>::Ptr filtered_cloud(new pcl::PointCloud<PointType>);
-    downsample.setInputCloud(input_cloud);
-    downsample.setLeafSize(01.0, 01.0, 01.0); //TODO 0.1 cm
-    downsample.filter(*downsampled_cloud);
 
     std::vector<pcl::PointCloud<PointType>::Ptr> clusters;
-    plane_filter(input_cloud, filtered_cloud);
+    plane_filter(downsampled_cloud, filtered_cloud);
     clusterExtraction(filtered_cloud, clusters);
 
     for (size_t i = 0; i < clusters.size(); ++i) {
