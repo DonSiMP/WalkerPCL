@@ -2,7 +2,7 @@ template <class T>
 PassThroughFilter<T>::PassThroughFilter(const std::string &field_name, float min, float max) {
     pass_through.setFilterFieldName(field_name);
     pass_through.setFilterLimits(min, max);
-    pass_through.setFilterLimitsNegative(false);
+    pass_through.setNegative(false);
 }
 
 template <class T>
