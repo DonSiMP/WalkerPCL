@@ -1,1 +1,2 @@
 + Implement 'passthrough' filter.
+- Are we interested in negative filters?

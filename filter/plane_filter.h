@@ -17,7 +17,7 @@ public:
     // Destructor.
     ~PlaneFilter();
 
-    // Actual function for downsampling the input cloud.
+    // Actual function for filtering the input cloud.
     void filter(const typename pcl::PointCloud<T>::ConstPtr &input_cloud, typename pcl::PointCloud<T>::Ptr &filtered_cloud);
 
 private:
