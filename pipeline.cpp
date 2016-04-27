@@ -16,6 +16,7 @@
 
 #include "filter/downsampler.h"
 #include "filter/plane_filter.h"
+#include "filter/pass_through_filter.h"
 #include "cloud_clusterer/euclidean_clusterer.h"
 
 typedef pcl::PointXYZ PointType;
@@ -26,16 +27,20 @@ void usage(const std::string &call) {
 }
 
 int main (int argc, char *argv[]) {
-    std::string file_name;
-    pcl::PointCloud<PointType>::Ptr input_cloud(new pcl::PointCloud<PointType>);
 
-    // Parse command line arguments
+    /* Parse command line arguments */
+
+    std::string file_name;
+
     if (argc < 2) {
         usage(argv[0]);
     }
     file_name = argv[1];
 
-    // Load cloud from file
+    /* Load cloud from file */
+
+    pcl::PointCloud<PointType>::Ptr input_cloud(new pcl::PointCloud<PointType>);
+
     std::cout << "Loading file" << std::endl;
     if (pcl::io::loadPCDFile(file_name, *input_cloud) < 0) {
         std::string error = "Couldn't read file '" + file_name + "'.\n";
@@ -43,20 +48,29 @@ int main (int argc, char *argv[]) {
         return -1;
     }
 
-    pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>);
+    /* Apply filters */
 
-    Downsampler<PointType> downsampler(01.0, 01.0, 01.0);
-    downsampler.filter(input_cloud, downsampled_cloud);
-
+    std::vector<Filter<PointType>*> filters;
     pcl::PointCloud<PointType>::Ptr filtered_cloud(new pcl::PointCloud<PointType>);
 
-    PlaneFilter<PointType> plane_filter(true, 10.0); // optimize_coefficients: true, threshold: 1.0 cm, TODO hardcoded
-    plane_filter.filter(downsampled_cloud, filtered_cloud);
+    filters.push_back(new Downsampler<PointType>(01.0, 01.0, 01.0)); // size_x: 0.1 cm, size_y: 0.1 cm, size_z: 0.1 cm,           TODO hardcoded
+    filters.push_back(new PassThroughFilter<PointType>("z", -1000.0, 1000.0)); // field_name: "z", min: -100.0 cm, max: 100.0 cm, TODO hardcoded
+    filters.push_back(new PlaneFilter<PointType>(true, 10.0)); // optimize_coefficients: true, threshold: 1.0 cm,                 TODO hardcoded
+
+    for (size_t i = 0; i < filters.size(); ++i) {
+        filters[i]->filter(input_cloud, filtered_cloud);
+        input_cloud.swap(filtered_cloud);
+    }
+    input_cloud.swap(filtered_cloud);
+
+    /* Extract clusters */
 
     std::vector<pcl::PointCloud<PointType>::Ptr> clusters;
 
-    EuclideanClusterer<PointType> clusterer(15.0, 100, 25000); // tolerance: 1.5 cm, min: 100, max: 25000, TODO hardcoded
+    EuclideanClusterer<PointType> clusterer(15.0, 100, 25000); // tolerance: 1.5 cm, min: 100, max: 25000,                        TODO hardcoded
     clusterer.cluster(filtered_cloud, clusters);
+
+    /* Debug */
 
     for (size_t i = 0; i < clusters.size(); ++i) {
         std::cerr << "Saving cluster " << i << " to file...";

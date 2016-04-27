@@ -1,2 +1,3 @@
-+ Implement 'passthrough' filter.
++ Implement boost pointers for custom classes.
++ Plane filter filters only one plane?
 - Are we interested in negative filters?
