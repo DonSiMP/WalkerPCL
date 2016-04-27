@@ -15,6 +15,7 @@
 #include <pcl/PointIndices.h>
 
 #include "filter/downsampler.h"
+#include "filter/plane_filter.h"
 #include "cloud_clusterer/euclidean_clusterer.h"
 
 typedef pcl::PointXYZ PointType;
@@ -22,27 +23,6 @@ typedef pcl::PointXYZ PointType;
 void usage(const std::string &call) {
     std::cout << call << " FILE_NAME" << std::endl;
     exit(1);
-}
-
-void plane_filter(pcl::PointCloud<PointType>::ConstPtr const &input_cloud, pcl::PointCloud<PointType>::Ptr &filtered_cloud) {
-    pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
-    pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
-
-    pcl::SACSegmentation<PointType> segmentator;
-    segmentator.setOptimizeCoefficients(true); //TODO optional
-    segmentator.setModelType(pcl::SACMODEL_PLANE);
-    segmentator.setMethodType(pcl::SAC_RANSAC);
-    segmentator.setDistanceThreshold(10.0); //TODO 1.0 cm hardcoded
-
-    segmentator.setInputCloud(input_cloud);
-    segmentator.segment(*inliers, *coefficients);
-
-    pcl::ExtractIndices<PointType> cloud_extractor(new pcl::ExtractIndices<PointType>);
-    cloud_extractor.setInputCloud(input_cloud);
-    cloud_extractor.setIndices(inliers);
-    cloud_extractor.setNegative(true);
-
-    cloud_extractor.filter(*filtered_cloud);
 }
 
 int main (int argc, char *argv[]) {
@@ -70,8 +50,10 @@ int main (int argc, char *argv[]) {
 
     pcl::PointCloud<PointType>::Ptr filtered_cloud(new pcl::PointCloud<PointType>);
 
+    PlaneFilter<PointType> plane_filter(true, 10.0); // optimize_coefficients: true, threshold: 1.0 cm, TODO hardcoded
+    plane_filter.filter(downsampled_cloud, filtered_cloud);
+
     std::vector<pcl::PointCloud<PointType>::Ptr> clusters;
-    plane_filter(downsampled_cloud, filtered_cloud);
 
     EuclideanClusterer<PointType> clusterer(15.0, 100, 25000); // tolerance: 1.5 cm, min: 100, max: 25000, TODO hardcoded
     clusterer.cluster(filtered_cloud, clusters);
