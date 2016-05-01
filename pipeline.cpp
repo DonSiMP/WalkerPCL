@@ -22,6 +22,10 @@
 
 typedef pcl::PointXYZ PointType;
 
+double cloud_colors[3][3] = {   0, 127, 127,
+                              127, 127,   0,
+                              127,   0, 127 }; //TODO hardcoded
+
 bool first = true; //TODO remove global variables
 bool next = false;
 
@@ -51,9 +55,9 @@ int main (int argc, char *argv[]) {
     /* Initialize visualization */
 
     pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer);
-    pcl::visualization::PointCloudColorHandlerRandom<PointType> color_handlers[3];
-
     viewer->registerKeyboardCallback(keyboardCallback);
+    viewer->addCube(-625, 625, -625, 625, 0, 1200, 255, 255, 255, "render_area", 0); //TODO hardcoded
+    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION, pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME, "render_area", 0);
 
     /* Iterate over all files in directory */
 
@@ -102,7 +106,7 @@ int main (int argc, char *argv[]) {
         pcl::PointCloud<PointType>::Ptr filtered_cloud(new pcl::PointCloud<PointType>);
 
         filters.push_back(new Downsampler<PointType>(01.0, 01.0, 01.0)); // size_x: 0.1 cm, size_y: 0.1 cm, size_z: 0.1 cm,           TODO hardcoded
-        filters.push_back(new PassThroughFilter<PointType>("z", -1000.0, 1000.0)); // field_name: "z", min: -100.0 cm, max: 100.0 cm, TODO hardcoded
+        filters.push_back(new PassThroughFilter<PointType>("z", 0.0, 1200.0)); // field_name: "z", min: -100.0 cm, max: 100.0 cm, TODO hardcoded
         filters.push_back(new PlaneFilter<PointType>(true, 10.0)); // optimize_coefficients: true, threshold: 1.0 cm,                 TODO hardcoded
 
         for (size_t i = 0; i < filters.size(); ++i) {
@@ -124,12 +128,11 @@ int main (int argc, char *argv[]) {
             std::stringstream convert;
             convert << i;
 
-            if (first) {
-                color_handlers[i%3].setInputCloud(clusters[i]);
-                viewer->addPointCloud<PointType>(clusters[i], color_handlers[i%3], convert.str());
-            }
+            pcl::visualization::PointCloudColorHandlerCustom<PointType> color_handler(clusters[i], cloud_colors[i%3][0], cloud_colors[i%3][1], cloud_colors[i%3][2]);
+            if (first)
+                viewer->addPointCloud<PointType>(clusters[i], color_handler, convert.str());
             else
-                viewer->updatePointCloud<PointType>(clusters[i], convert.str());
+                viewer->updatePointCloud<PointType>(clusters[i], color_handler, convert.str());
         }
         first = false;
 
