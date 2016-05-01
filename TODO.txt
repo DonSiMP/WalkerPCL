@@ -1,3 +1,7 @@
 + Implement boost pointers for custom classes.
 + Plane filter filters only one plane?
++ Control frames with keyboard callbacks.
++ Draw passthrough planes.
++ What about 2+ clusters?
++ Initialize camera.
 - Are we interested in negative filters?
