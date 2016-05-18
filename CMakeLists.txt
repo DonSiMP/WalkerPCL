@@ -11,3 +11,9 @@ target_link_libraries(pipeline ${PCL_LIBRARIES})
 
 add_executable(pipeline_file pipeline_file.cpp)
 target_link_libraries(pipeline_file ${PCL_LIBRARIES})
+
+add_executable(ism_train ism_train.cpp)
+target_link_libraries(ism_train ${PCL_LIBRARIES})
+
+add_executable(ism_test ism_test.cpp)
+target_link_libraries(ism_test ${PCL_LIBRARIES})
