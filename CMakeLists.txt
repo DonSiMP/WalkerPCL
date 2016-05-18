@@ -8,3 +8,6 @@ add_definitions(${PCL_DEFINITIONS})
 
 add_executable(pipeline pipeline.cpp)
 target_link_libraries(pipeline ${PCL_LIBRARIES})
+
+add_executable(pipeline_file pipeline_file.cpp)
+target_link_libraries(pipeline_file ${PCL_LIBRARIES})
