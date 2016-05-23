@@ -17,3 +17,12 @@ target_link_libraries(ism_train ${PCL_LIBRARIES})
 
 add_executable(ism_test ism_test.cpp)
 target_link_libraries(ism_test ${PCL_LIBRARIES})
+
+add_executable(viewer viewer.cpp)
+target_link_libraries(viewer ${PCL_LIBRARIES})
+
+add_executable(ism_pipeline ism_pipeline.cpp)
+target_link_libraries(ism_pipeline ${PCL_LIBRARIES})
+
+add_executable(ism_pipeline_file ism_pipeline_file.cpp)
+target_link_libraries(ism_pipeline_file ${PCL_LIBRARIES})
